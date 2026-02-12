@@ -1,0 +1,12 @@
+{
+  "name": "imping",
+  "version": "0.1.0",
+  "description": "A GUI application for visualizing ping latency over time",
+  "dependencies": [
+    {
+      "name": "imgui",
+      "features": ["sdl3-binding", "sdl3-renderer-binding"]
+    },
+    "sdl3"
+  ]
+}

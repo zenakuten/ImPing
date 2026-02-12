@@ -7,10 +7,6 @@
 
 #include <cstdio>
 
-#ifdef _WIN32
-#include <windows.h>
-#endif
-
 int main(int argc, char* argv[]) {
     // Initialize SDL
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -130,10 +126,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-
-#ifdef _WIN32
-// Windows entry point for GUI application (no console)
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
-    return main(__argc, __argv);
-}
-#endif

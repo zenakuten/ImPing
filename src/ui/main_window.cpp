@@ -32,9 +32,16 @@ bool MainWindow::render(std::vector<std::shared_ptr<PingTarget>>& targets) {
     ImVec2 work_size = viewport->WorkSize;
 
     // Left side panel (targets + stats)
-    float side_panel_width = 300.0f;
+    float side_panel_width = 0.0f;
+    constexpr float splitter_v_thickness = 6.0f;
 
     if (show_target_panel_ || show_stats_panel_) {
+        // Clamp side panel width
+        float min_w = 150.0f;
+        float max_w = work_size.x * 0.5f;
+        side_panel_width_ = std::max(min_w, std::min(side_panel_width_, max_w));
+        side_panel_width = side_panel_width_;
+
         ImGui::SetNextWindowPos(work_pos);
         ImGui::SetNextWindowSize(ImVec2(side_panel_width, work_size.y));
         ImGui::Begin("##SidePanel", nullptr,
@@ -54,8 +61,59 @@ bool MainWindow::render(std::vector<std::shared_ptr<PingTarget>>& targets) {
         }
 
         ImGui::End();
-    } else {
-        side_panel_width = 0.0f;
+
+        // Vertical splitter between side panel and chart
+        float splitter_x = work_pos.x + side_panel_width;
+
+        ImGui::SetNextWindowPos(ImVec2(splitter_x, work_pos.y));
+        ImGui::SetNextWindowSize(ImVec2(splitter_v_thickness, work_size.y));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(1, 1));
+        ImGui::Begin("##VSplitter", nullptr,
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav);
+
+        // Draw a visible handle line
+        ImDrawList* vdl = ImGui::GetWindowDrawList();
+        float vcx = splitter_x + splitter_v_thickness * 0.5f;
+        float vcy = work_pos.y + work_size.y * 0.5f;
+        vdl->AddLine(ImVec2(vcx, vcy - 20), ImVec2(vcx, vcy + 20),
+                     IM_COL32(120, 120, 140, 255), 2.0f);
+
+        ImGui::End();
+        ImGui::PopStyleVar(2);
+
+        // Invisible drag button over the vertical splitter
+        ImGui::SetNextWindowPos(ImVec2(splitter_x, work_pos.y));
+        ImGui::SetNextWindowSize(ImVec2(splitter_v_thickness, work_size.y));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0, 0));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2(1, 1));
+        ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0, 0, 0, 0));
+        ImGui::PushStyleColor(ImGuiCol_Border, ImVec4(0, 0, 0, 0));
+        ImGui::Begin("##VSplitterDrag", nullptr,
+                     ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+                     ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar |
+                     ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoNav);
+
+        ImGui::InvisibleButton("##vsplitter_btn", ImVec2(splitter_v_thickness, work_size.y));
+        if (ImGui::IsItemHovered()) {
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        }
+        if (ImGui::IsItemActive()) {
+            float delta = ImGui::GetIO().MouseDelta.x;
+            if (delta != 0.0f) {
+                side_panel_width_ += delta;
+                side_panel_width_ = std::max(min_w, std::min(side_panel_width_, max_w));
+            }
+            ImGui::SetMouseCursor(ImGuiMouseCursor_ResizeEW);
+        }
+
+        ImGui::End();
+        ImGui::PopStyleColor(2);
+        ImGui::PopStyleVar(2);
+
+        side_panel_width += splitter_v_thickness;
     }
 
     // Right side: chart on top, traceroute on bottom with draggable splitter

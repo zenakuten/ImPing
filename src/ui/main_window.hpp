@@ -52,6 +52,7 @@ private:
     bool quit_requested_ = false;
     bool show_about_ = false;
     float traceroute_fraction_ = 0.3f;  // fraction of right side for traceroute
+    float side_panel_width_ = 300.0f;
     int ping_interval_ms_ = 1000;
 };
 

@@ -22,6 +22,21 @@ set(SOURCES
     src/ui/traceroute_panel.cpp
 )
 
+# Platform-specific ping/traceroute implementations
+if(WIN32)
+    list(APPEND SOURCES
+        src/app_win32.cpp
+        src/ping/pinger_win32.cpp
+        src/ping/traceroute_win32.cpp
+    )
+else()
+    list(APPEND SOURCES
+        src/app_linux.cpp
+        src/ping/pinger_linux.cpp
+        src/ping/traceroute_linux.cpp
+    )
+endif()
+
 set(HEADERS
     src/app.hpp
     src/core/ring_buffer.hpp

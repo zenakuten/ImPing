@@ -2,16 +2,6 @@
 
 #include <algorithm>
 #include <fstream>
-#include <filesystem>
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#define NOMINMAX
-#include <windows.h>
-#include <shlobj.h>
-#else
-#include <cstdlib>
-#endif
 
 namespace imping {
 
@@ -292,30 +282,6 @@ TargetColor App::get_next_color() {
     TargetColor color = color_palette_[next_color_index_ % color_palette_.size()];
     ++next_color_index_;
     return color;
-}
-
-std::string App::get_config_path() {
-    std::filesystem::path dir;
-
-#ifdef _WIN32
-    char path[MAX_PATH];
-    if (SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, path))) {
-        dir = std::filesystem::path(path) / "imping";
-    } else {
-        dir = ".";
-    }
-#else
-    const char* xdg = std::getenv("XDG_CONFIG_HOME");
-    if (xdg && xdg[0]) {
-        dir = std::filesystem::path(xdg) / "imping";
-    } else {
-        const char* home = std::getenv("HOME");
-        dir = std::filesystem::path(home ? home : ".") / ".config" / "imping";
-    }
-#endif
-
-    std::filesystem::create_directories(dir);
-    return (dir / "recent_targets.txt").string();
 }
 
 void App::load_recent_targets() {

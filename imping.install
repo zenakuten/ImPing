@@ -1,0 +1,8 @@
+post_install() {
+    setcap cap_net_raw+ep /usr/bin/imping 2>/dev/null || \
+        echo "==> NOTE: Run 'sudo setcap cap_net_raw+ep /usr/bin/imping' to allow pinging without root."
+}
+
+post_upgrade() {
+    post_install
+}

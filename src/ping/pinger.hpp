@@ -46,6 +46,8 @@ public:
 private:
     void worker_thread();
     PingResult ping_impl(const std::string& host, uint32_t timeout_ms);
+    bool initialize_platform();
+    void cleanup_platform();
 
     std::atomic<bool> running_{false};
     std::vector<std::thread> workers_;
@@ -53,9 +55,7 @@ private:
     std::condition_variable queue_cv_;
     std::queue<PingRequest> request_queue_;
 
-#ifdef _WIN32
-    void* icmp_handle_ = nullptr;
-#endif
+    void* icmp_handle_ = nullptr;  // Used by Win32 platform implementation
 };
 
 } // namespace imping

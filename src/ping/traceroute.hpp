@@ -62,10 +62,10 @@ private:
     };
 
     HopProbeResult probe_hop(const std::string& target_ip, int ttl, uint32_t timeout_ms);
+    bool initialize_platform();
+    void cleanup_platform();
 
-#ifdef _WIN32
-    void* icmp_handle_ = nullptr;
-#endif
+    void* icmp_handle_ = nullptr;  // Used by Win32 platform implementation
 };
 
 } // namespace imping

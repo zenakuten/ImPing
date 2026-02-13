@@ -201,13 +201,7 @@ bool MainWindow::render(std::vector<std::shared_ptr<PingTarget>>& targets) {
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove |
                      ImGuiWindowFlags_NoCollapse);
 
-        int sel = target_panel_.selected_index();
-        std::shared_ptr<PingTarget> selected;
-        if (sel >= 0 && sel < static_cast<int>(targets.size())) {
-            selected = targets[sel];
-        }
-
-        traceroute_panel_.render_inline(selected);
+        traceroute_panel_.render_inline(targets, target_panel_.selected_index());
         ImGui::End();
     }
 
@@ -267,7 +261,7 @@ void MainWindow::render_menu_bar() {
     if (ImGui::BeginPopupModal("About ImPing", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::Text("ImPing");
         ImGui::Separator();
-        ImGui::Text("Version 0.1.0");
+        ImGui::Text("Version 0.2.0");
         ImGui::Text("A real-time ping and traceroute visualizer.");
         ImGui::Spacing();
         ImGui::TextDisabled("Built with ImGui, SDL3, and vcpkg");

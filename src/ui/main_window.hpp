@@ -18,7 +18,7 @@ public:
     using AddTargetCallback = std::function<void(const std::string&)>;
     using RemoveTargetCallback = std::function<void(size_t)>;
     using SelectTargetCallback = std::function<void(int)>;
-    using RefreshTracerouteCallback = std::function<void()>;
+    using RefreshTracerouteCallback = std::function<void(int)>;
 
     MainWindow();
 
@@ -36,6 +36,8 @@ public:
     TraceroutePanel& traceroute_panel() { return traceroute_panel_; }
 
     void set_selected_index(int index) { target_panel_.set_selected_index(index); }
+    [[nodiscard]] int ping_interval_ms() const { return ping_interval_ms_; }
+    void set_ping_interval_ms(int ms) { ping_interval_ms_ = ms; }
 
 private:
     void render_menu_bar();

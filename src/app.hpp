@@ -42,8 +42,8 @@ private:
     TargetColor get_next_color();
 
     static std::string get_config_path();
-    void load_recent_targets();
-    void save_recent_targets();
+    void load_settings();
+    void save_settings();
 
     std::vector<std::shared_ptr<PingTarget>> targets_;
     std::mutex targets_mutex_;
@@ -58,6 +58,7 @@ private:
 
     // Traceroute
     std::atomic<int> selected_target_index_{-1};
+    std::atomic<int> traceroute_tab_index_{-1};
     std::thread traceroute_thread_;
     std::atomic<bool> traceroute_running_{false};
 
@@ -66,7 +67,7 @@ private:
     std::vector<std::string> pending_adds_;
     std::vector<size_t> pending_removes_;
     std::optional<int> pending_selection_;
-    bool pending_traceroute_refresh_ = false;
+    std::optional<int> pending_traceroute_refresh_;
 
     // Color palette for new targets
     std::vector<TargetColor> color_palette_;

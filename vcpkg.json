@@ -1,6 +1,6 @@
 {
   "name": "imping",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A GUI application for visualizing ping latency over time",
   "dependencies": [
     {

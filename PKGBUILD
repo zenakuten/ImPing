@@ -1,6 +1,6 @@
 # Maintainer:
 pkgname=imping
-pkgver=0.1.0
+pkgver=0.2.0
 pkgrel=1
 pkgdesc='A real-time ping and traceroute visualizer using ImGui and SDL3'
 arch=('x86_64')

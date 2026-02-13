@@ -20,7 +20,7 @@ std::string App::get_config_path() {
     }
 
     std::filesystem::create_directories(dir);
-    return (dir / "recent_targets.txt").string();
+    return (dir / "app_settings.txt").string();
 }
 
 } // namespace imping

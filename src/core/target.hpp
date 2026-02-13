@@ -52,6 +52,7 @@ public:
     // Traceroute
     void set_traceroute(const TracerouteResult& result);
     [[nodiscard]] std::optional<TracerouteResult> get_traceroute() const;
+    void clear_traceroute();
     void update_hop(int hop_index, double latency_ms);
     void update_hop_timeout(int hop_index);
     [[nodiscard]] bool has_route() const;

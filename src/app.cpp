@@ -1,6 +1,7 @@
 #include "app.hpp"
 
 #include <algorithm>
+#include <cstdlib>
 #include <fstream>
 
 namespace imping {
@@ -45,7 +46,7 @@ bool App::initialize() {
 
     // Load recent targets if none were provided via command line
     if (targets_.empty()) {
-        load_recent_targets();
+        load_settings();
     }
 
     // Set up UI callbacks - queue operations to avoid deadlock
@@ -64,9 +65,9 @@ bool App::initialize() {
         pending_selection_ = index;
     });
 
-    main_window_.set_refresh_traceroute_callback([this]() {
+    main_window_.set_refresh_traceroute_callback([this](int index) {
         std::lock_guard lock(pending_mutex_);
-        pending_traceroute_refresh_ = true;
+        pending_traceroute_refresh_ = index;
     });
 
     // Start ping thread
@@ -80,7 +81,7 @@ void App::update() {
     std::vector<std::string> adds;
     std::vector<size_t> removes;
     std::optional<int> selection;
-    bool refresh_traceroute = false;
+    std::optional<int> refresh_traceroute;
 
     {
         std::lock_guard lock(pending_mutex_);
@@ -89,7 +90,7 @@ void App::update() {
         selection = pending_selection_;
         pending_selection_.reset();
         refresh_traceroute = pending_traceroute_refresh_;
-        pending_traceroute_refresh_ = false;
+        pending_traceroute_refresh_.reset();
     }
 
     for (const auto& host : adds) {
@@ -126,14 +127,14 @@ void App::update() {
     }
 
     // Handle traceroute refresh
-    if (refresh_traceroute) {
-        int sel = selected_target_index_.load();
-        if (sel >= 0) {
+    if (refresh_traceroute.has_value()) {
+        int idx = refresh_traceroute.value();
+        if (idx >= 0) {
             std::shared_ptr<PingTarget> target;
             {
                 std::lock_guard lock(targets_mutex_);
-                if (sel < static_cast<int>(targets_.size())) {
-                    target = targets_[sel];
+                if (idx < static_cast<int>(targets_.size())) {
+                    target = targets_[idx];
                 }
             }
             if (target) {
@@ -141,6 +142,12 @@ void App::update() {
             }
         }
     }
+
+    // Sync ping interval from UI slider
+    ping_interval_ = std::chrono::milliseconds(main_window_.ping_interval_ms());
+
+    // Sync active traceroute tab for hop pinging
+    traceroute_tab_index_.store(main_window_.traceroute_panel().active_tab_index());
 
     // Update traceroute panel running state
     main_window_.traceroute_panel().set_running(traceroute_running_.load());
@@ -162,7 +169,7 @@ void App::shutdown() {
         traceroute_thread_.join();
     }
 
-    save_recent_targets();
+    save_settings();
 }
 
 void App::add_target(const std::string& host) {
@@ -222,8 +229,8 @@ void App::ping_thread_func() {
             target->add_result(result);
         }
 
-        // Ping all hops of the selected target's route
-        int sel = selected_target_index_.load();
+        // Ping all hops of the active traceroute tab's route
+        int sel = traceroute_tab_index_.load();
         if (sel >= 0 && sel < static_cast<int>(targets_snapshot.size())) {
             auto& selected = targets_snapshot[sel];
             if (selected->has_route()) {
@@ -284,31 +291,44 @@ TargetColor App::get_next_color() {
     return color;
 }
 
-void App::load_recent_targets() {
+void App::load_settings() {
     std::ifstream file(get_config_path());
     if (!file.is_open()) return;
 
     std::string line;
     size_t count = 0;
-    while (std::getline(file, line) && count < MAX_RECENT_TARGETS) {
+    while (std::getline(file, line)) {
         // Trim whitespace
         auto start = line.find_first_not_of(" \t\r\n");
         if (start == std::string::npos) continue;
         auto end = line.find_last_not_of(" \t\r\n");
-        std::string host = line.substr(start, end - start + 1);
+        std::string trimmed = line.substr(start, end - start + 1);
+        if (trimmed.empty()) continue;
 
-        if (!host.empty()) {
-            add_target(host);
+        // Parse key=value settings
+        if (trimmed.starts_with("interval=")) {
+            int ms = std::atoi(trimmed.c_str() + 9);
+            ms = std::clamp(ms, 100, 5000);
+            ping_interval_ = std::chrono::milliseconds(ms);
+            main_window_.set_ping_interval_ms(ms);
+            continue;
+        }
+
+        // Otherwise treat as a target hostname
+        if (count < MAX_RECENT_TARGETS) {
+            add_target(trimmed);
             ++count;
         }
     }
 }
 
-void App::save_recent_targets() {
+void App::save_settings() {
     std::lock_guard lock(targets_mutex_);
 
     std::ofstream file(get_config_path());
     if (!file.is_open()) return;
+
+    file << "interval=" << ping_interval_.count() << "\n";
 
     // Save the last 5 targets
     size_t start = 0;

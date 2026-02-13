@@ -94,6 +94,11 @@ std::optional<TracerouteResult> PingTarget::get_traceroute() const {
     return traceroute_result_;
 }
 
+void PingTarget::clear_traceroute() {
+    std::lock_guard lock(mutex_);
+    traceroute_result_.reset();
+}
+
 void PingTarget::update_hop(int hop_index, double latency_ms) {
     std::lock_guard lock(mutex_);
     if (traceroute_result_ && hop_index >= 0 &&

@@ -4,9 +4,18 @@
   "description": "A GUI application for visualizing ping latency over time",
   "dependencies": [
     {
+      "name": "dbus",
+      "default-features": false,
+      "platform": "linux"
+    },
+    {
       "name": "imgui",
       "features": ["sdl3-binding", "sdl3-renderer-binding"]
     },
-    "sdl3"
+    {
+      "name": "sdl3",
+      "default-features": false,
+      "features": ["wayland", "x11"]
+    }
   ]
 }

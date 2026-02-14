@@ -12,20 +12,20 @@ source=()
 sha256sums=()
 
 prepare() {
-    if [[ ! -d "$srcdir/vcpkg" ]]; then
-        git clone https://github.com/microsoft/vcpkg.git "$srcdir/vcpkg"
-        "$srcdir/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+    if [[ ! -d "$srcdir/_vcpkg" ]]; then
+        git clone https://github.com/microsoft/vcpkg.git "$srcdir/_vcpkg"
+        "$srcdir/_vcpkg/bootstrap-vcpkg.sh" -disableMetrics
     fi
 }
 
 build() {
-    cmake -B "$srcdir/build" -S "$startdir" -G Ninja \
+    cmake -B "$srcdir/_build" -S "$startdir" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
-        -DCMAKE_TOOLCHAIN_FILE="$srcdir/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        -DCMAKE_TOOLCHAIN_FILE="$srcdir/_vcpkg/scripts/buildsystems/vcpkg.cmake"
 
-    cmake --build "$srcdir/build"
+    cmake --build "$srcdir/_build"
 }
 
 package() {
-    install -Dm755 "$srcdir/build/bin/imping" "$pkgdir/usr/bin/imping"
+    install -Dm755 "$srcdir/_build/bin/imping" "$pkgdir/usr/bin/imping"
 }
